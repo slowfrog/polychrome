@@ -9,6 +9,14 @@ canvas
     <script src="polychrome.js"></script>
   </head>
   <body>
+    Palette: <select id="palette" onchange="pyc.start()">
+      <option value="GOM4">4-colors</option>
+      <option value="GOM7">7-colors</option>
+      <option value="CMYRGBW">CMYRGB</option>
+      <option value="YRGBW">YRGB</option>
+      <option value="CMYW">CMY</option>
+      <option value="RGBW">RGB</option>
+</select>
     <input id="source_image" type="text" onchange="pyc.refresh()" style="width: 500px" value="mario.png"><br>
     <img src="mario.png" id="image_in"></img><br>
     <!--img src="firefox-logo.png" id="image_in"></img><br-->

@@ -1,8 +1,9 @@
 var pyc = {};
 
 pyc.start = function() {
-  var z = 4; // Zoom factor
-  var cols = pyc.COLS.GOM4; // Palette
+  var z = 6; // Zoom factor
+  var palette = document.getElementById("palette").value;
+  var cols = pyc.COLS[palette];
   
   pyc.g = document.getElementById("viewport").getContext("2d");
   pyc.g.fillStyle = "#ffffff";
@@ -30,14 +31,15 @@ pyc.start = function() {
       var conv = pyc.convert(r, g, b, cols);
       for (var e = 0; e < 4; ++e) {
         var de = Math.floor(e / 2);
-        var col = (e < conv.length ? conv[e] : "#000000");
+        var col = (e < conv.length ? conv[e].col : "#000000");
+        var colname = conv[e].name;
         if (col === "#fff") {
           continue;
         }
-        if (used[col] === undefined) {
-          used[col] = 1;
+        if (used[colname] === undefined) {
+          used[colname] = 1;
         } else {
-          ++used[col];
+          ++used[colname];
         }
         pyc.g.fillStyle = col;
         // Squares
@@ -82,11 +84,21 @@ pyc.COLS.RGBW = [ { col: "#f00", r: 0, g: 255, b: 255 },
                   { col: "#00f", r: 255, g: 255, b: 0 },
                   { col: "#fff", r: 0, g: 0, b: 0 }];
 
-pyc.COLS.GOM4 = [{ col: "#ee0", r: 16, g: 16, b: 255 },
-                 { col: "#c00", r: 48, g: 255, b: 255 },
-                 { col: "#080", r: 255, g: 127, b: 255 },
-                 { col: "#09f", r: 255, g: 111, b: 0 },
-                 { col: "#fff", r: 0, g: 0, b: 0 }];
+pyc.COLS.GOM4 = [{ name: "yellow", col: "#ee0", r: 16, g: 16, b: 255 },
+                 { name: "red",    col: "#c00", r: 48, g: 255, b: 255 },
+                 { name: "green",  col: "#080", r: 255, g: 127, b: 255 },
+                 { name: "blue",   col: "#09f", r: 255, g: 111, b: 0 },
+                 { name: "-none-", col: "#fff", r: 0, g: 0, b: 0 }];
+
+pyc.COLS.GOM7 = [{ name: "blue",   col: "#09f", r: 255, g: 111, b: 0 },
+                 { name: "yellow", col: "#ee0", r: 16, g: 16, b: 255 },
+                 { name: "orange", col: "#d92", r: 40, g:204, b: 216 },
+                 { name: "pink",   col: "#e08", r: 24, g: 255, b: 120 },
+                 { name: "green",  col: "#080", r: 255, g: 127, b: 255 },
+                 { name: "violet", col: "#408", r: 184, g: 255, b: 120 },
+                 { name: "red",    col: "#c00", r: 48, g: 255, b: 255 },
+                 { name: "-none-", col: "#fff", r: 0, g: 0, b: 0 }
+                ];
 
 pyc.convert = function(r, g, b, cols) {
   var ret = [];
@@ -102,7 +114,7 @@ pyc.convert = function(r, g, b, cols) {
           var dist = 2 * Math.abs(vr - r * 4) + 3 * Math.abs(vg - g * 4) + Math.abs(vb - b * 4);
           if ((dist < mindist) || ((dist === mindist) && (Math.random() < 0.5))) {
             mindist = dist;
-            ret = [ cols[a00].col, cols[a10].col, cols[a01].col, cols[a11].col ];
+            ret = [ cols[a00], cols[a10], cols[a01], cols[a11] ];
           }
         }
       }
