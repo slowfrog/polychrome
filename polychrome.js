@@ -1,11 +1,12 @@
 var pyc = {};
 
 pyc.start = function() {
-  var z = 6; // Zoom factor
+  var z = parseInt(document.getElementById("gsize").value);
   var palette = document.getElementById("palette").value;
   var cols = pyc.COLS[palette];
   
   pyc.g = document.getElementById("viewport").getContext("2d");
+  pyc.g.save();
   pyc.g.fillStyle = "#ffffff";
   pyc.g.fillRect(0, 0, 600, 800);
 
@@ -21,7 +22,29 @@ pyc.start = function() {
   var data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
   var used = {};
   for (var i = 0; i < tmp.width; ++i) {
+    if (i % 5 === 0) {
+      pyc.g.save();
+      pyc.g.beginPath();
+      pyc.g.strokeStyle = "#ccc";
+      pyc.g.moveTo(z * i * 2 + 0.5, 0.5);
+      pyc.g.lineTo(z * i * 2 + 0.5, z * tmp.height * 2 + 0.5);
+      pyc.g.closePath();
+      pyc.g.stroke();
+      pyc.g.restore();
+    }
+    
     for (var j = 0; j < tmp.height; ++j) {
+      if ((i === 0) && (j % 5 === 0)) {
+        pyc.g.save();
+        pyc.g.beginPath();
+        pyc.g.strokeStyle = "#ccc";
+        pyc.g.moveTo(0.5, z * j * 2 + 0.5);
+        pyc.g.lineTo(z * tmp.width * 2 + 0.5, z * j * 2 + 0.5);
+        pyc.g.closePath();
+        pyc.g.stroke();
+        pyc.g.restore();
+      }
+      
       var didx = 4 * (j * tmp.width + i);
       var r = data[didx];
       var g = data[didx + 1];
@@ -29,6 +52,9 @@ pyc.start = function() {
       var a = data[didx + 3];
 
       var conv = pyc.convert(r, g, b, cols);
+      pyc.g.fillStyle = (i + j) % 2 === 0 ? "#ffffff" : "#eeeeee";
+      pyc.g.fillRect(z * i * 2 + 0.5, z * j * 2 + 0.5, z * 2, z * 2);
+      
       for (var e = 0; e < 4; ++e) {
         var de = Math.floor(e / 2);
         var col = (e < conv.length ? conv[e].col : "#000000");
@@ -42,8 +68,6 @@ pyc.start = function() {
           ++used[colname];
         }
         pyc.g.fillStyle = col;
-        // Squares
-        //pyc.g.fillRect(z * (i * 2 + (e % 2)), z * (j * 2 + de), z, z);
         // Discs
         pyc.g.beginPath();
         pyc.g.arc(z * (i * 2 + (e % 2) + 0.5), z * (j * 2 + de + 0.5), z / 2, 0, Math.PI * 2, true);
@@ -51,6 +75,7 @@ pyc.start = function() {
       }
     }
   }
+  pyc.g.restore();
   var total = 0;
   var max = 0;
   for (var k in used) {

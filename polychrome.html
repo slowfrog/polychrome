@@ -1,3 +1,4 @@
+<!doctype html>
 <html>
   <head>
     <style>
@@ -11,14 +12,41 @@ canvas
   <body>
     Palette: <select id="palette" onchange="pyc.start()">
       <option value="GOM4">4-colors</option>
-      <option value="GOM7">7-colors</option>
+      <option value="GOM7" selected="selected">7-colors</option>
       <option value="CMYRGBW">CMYRGB</option>
       <option value="YRGBW">YRGB</option>
       <option value="CMYW">CMY</option>
       <option value="RGBW">RGB</option>
 </select>
-    <input id="source_image" type="text" onchange="pyc.refresh()" style="width: 500px" value="mario.png"><br>
-    <img src="mario.png" id="image_in"></img><br>
+    Size: <select id="gsize" onchange="pyc.start()">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6" selected="selected">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+      </select>
+    File:
+    <select id="source_image" onchange="pyc.refresh()">
+      <option>mario-small.png</option>
+      <option>mario.png</option>
+      <option>chrome-logo.png</option>
+      <option>ie-logo.png</option>
+      <option>firefox-logo.png</option>
+      <option>tomcat-logo.png</option>
+      <option>sonic.png</option>
+      <option>monalisa.png</option>
+    </select>
+    <!--input id="source_image" type="text" onchange="pyc.refresh()" style="width: 500px"
+           value="mario-small.png"-->
+
+
+    <br>
+    <img src="mario-small.png" id="image_in"></img><br>
     <!--img src="firefox-logo.png" id="image_in"></img><br-->
     <canvas width="600" height="800" id="viewport">Canvas not supported</canvas>
   </body>
