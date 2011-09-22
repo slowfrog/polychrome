@@ -52,11 +52,14 @@ pyc.start = function() {
     }
   }
   var total = 0;
+  var max = 0;
   for (var k in used) {
     console.log(k + ": " + used[k]);
     total += used[k];
+    max = Math.max(max, used[k]);
   }
   console.log("Total: " + total);
+  console.log("You need " + Math.ceil(max / 88) + " packs");
 };
 
 pyc.COLS = {};
