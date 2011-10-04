@@ -55,7 +55,7 @@ pyc.convert_image = function() {
   }
   pyc.conversion_running = true;
   var z = parseInt(document.getElementById("gsize").value);
-  var zoom = parseInt(document.getElementById("zoom").value);
+  var zoom = parseFloat(document.getElementById("zoom").value);
   var palette = document.getElementById("palette").value;
   var cols = pyc.COLS[palette];
 
