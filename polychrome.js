@@ -27,20 +27,20 @@ pyc.COLS.RGBW = [ { col: "#f00", r: 0, g: 255, b: 255 },
                   { col: "#00f", r: 255, g: 255, b: 0 },
                   { col: "#fff", r: 0, g: 0, b: 0 }];
 
-pyc.COLS.GOM4 = [{ name: "yellow", col: "#ee0", r: 16, g: 16, b: 255 },
-                 { name: "red",    col: "#c00", r: 48, g: 255, b: 255 },
-                 { name: "green",  col: "#080", r: 255, g: 127, b: 255 },
-                 { name: "blue",   col: "#09f", r: 255, g: 111, b: 0 },
-                 { name: "-none-", col: "#fff", r: 0, g: 0, b: 0 }];
+pyc.COLS.GOM4 = [{ name: "yellow", col: "#ee0", r:  17, g:  17, b: 255 },
+                 { name: "red",    col: "#c00", r:  51, g: 255, b: 255 },
+                 { name: "green",  col: "#080", r: 255, g: 119, b: 255 },
+                 { name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
+                 { name: "-none-", col: "#fff", r:   0, g:   0, b:   0 }];
 
-pyc.COLS.GOM7 = [{ name: "blue",   col: "#09f", r: 255, g: 111, b: 0 },
-                 { name: "yellow", col: "#ee0", r: 16, g: 16, b: 255 },
-                 { name: "orange", col: "#d92", r: 40, g:204, b: 216 },
-                 { name: "pink",   col: "#e08", r: 24, g: 255, b: 120 },
-                 { name: "green",  col: "#080", r: 255, g: 127, b: 255 },
-                 { name: "violet", col: "#408", r: 184, g: 255, b: 120 },
-                 { name: "red",    col: "#c00", r: 48, g: 255, b: 255 },
-                 { name: "-none-", col: "#fff", r: 0, g: 0, b: 0 }
+pyc.COLS.GOM7 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
+                 { name: "yellow", col: "#ee0", r:  17, g:  17, b: 255 },
+                 { name: "orange", col: "#d92", r:  34, g: 102, b: 221 },
+                 { name: "pink",   col: "#e08", r:  17, g: 255, b: 119 },
+                 { name: "green",  col: "#080", r: 255, g: 119, b: 255 },
+                 { name: "violet", col: "#408", r: 187, g: 255, b: 119 },
+                 { name: "red",    col: "#c00", r:  51, g: 255, b: 255 },
+                 { name: "-none-", col: "#fff", r:   0, g:   0, b:   0 }
                 ];
 
 pyc.convert_image = function() {
@@ -190,7 +190,6 @@ pyc.upload = function() {
     pyc.change_image(reader.result);
   };
   reader.readAsDataURL(files[0]);
-  alert("Uploading file");
 };
 
 
