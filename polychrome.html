@@ -16,27 +16,6 @@ canvas
     <script src="polychrome.js"></script>
   </head>
   <body>
-    Palette: <select id="palette" onchange="pyc.start()">
-      <option value="GOM4">4-colors</option>
-      <option value="GOM7" selected="selected">7-colors</option>
-      <option value="CMYRGBW">CMYRGB</option>
-      <option value="YRGBW">YRGB</option>
-      <option value="CMYW">CMY</option>
-      <option value="RGBW">RGB</option>
-</select>
-    Size: <select id="gsize" onchange="pyc.start()">
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6" selected="selected">6</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-      <option value="9">9</option>
-      <option value="10">10</option>
-      </select>
-    <br>
     Predefined file:
     <select id="source_image" onchange="pyc.refresh()">
       <option>mario-small.png</option>
@@ -54,6 +33,35 @@ canvas
            value="mario-small.png"-->
 
 
+    <br>
+    Palette: <select id="palette" onchange="pyc.start()">
+      <option value="GOM4">4-colors</option>
+      <option value="GOM7" selected="selected">7-colors</option>
+      <option value="CMYRGBW">CMYRGB</option>
+      <option value="YRGBW">YRGB</option>
+      <option value="CMYW">CMY</option>
+      <option value="RGBW">RGB</option>
+</select>
+    Sticker Size: <select id="gsize" onchange="pyc.start()">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6" selected="selected">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+      </select>
+    Zoom out: <select id="zoom" onchange="pyc.start()">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="8">8</option>
+      <option value="16">16</option>
+      </select>
     <br>
     <img src="mario-small.png" id="image_in"></img><br>
     <!--img src="firefox-logo.png" id="image_in"></img><br-->

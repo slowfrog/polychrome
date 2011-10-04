@@ -45,6 +45,7 @@ pyc.COLS.GOM7 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
 
 pyc.convert_image = function() {
   var z = parseInt(document.getElementById("gsize").value);
+  var zoom = parseInt(document.getElementById("zoom").value);
   var palette = document.getElementById("palette").value;
   var cols = pyc.COLS[palette];
 
@@ -52,20 +53,20 @@ pyc.convert_image = function() {
   var img = document.getElementById("image_in");
   var width = img.width;
   var height = img.height;
-  viewport.width = width * z * 2;
-  viewport.height = height * z * 2;
+  viewport.width = Math.ceil(width / zoom) * z * 2;
+  viewport.height = Math.ceil(height / zoom) * z * 2;
   var gx = viewport.getContext("2d");
   gx.save();
   gx.fillStyle = "#ffffff";
   gx.fillRect(0, 0, width * z * 2, height * z * 2);
 
   var tmp = document.createElement("canvas");
-  tmp.width = width;
-  tmp.height = height;
+  tmp.width = Math.ceil(width / zoom);
+  tmp.height = Math.ceil(height / zoom);
   var gfx = tmp.getContext("2d");
   gfx.fillStyle = "#fff";
   gfx.fillRect(0, 0, tmp.width, tmp.height);
-  gfx.drawImage(img, 0, 0);
+  gfx.drawImage(img, 0, 0, width, height, 0, 0, tmp.width, tmp.height);
 
   var data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
   for (var i = 0; i < tmp.width; ++i) {
