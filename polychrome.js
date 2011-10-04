@@ -1,92 +1,6 @@
 var pyc = {};
 
-pyc.start = function() {
-  var z = parseInt(document.getElementById("gsize").value);
-  var palette = document.getElementById("palette").value;
-  var cols = pyc.COLS[palette];
-  
-  pyc.g = document.getElementById("viewport").getContext("2d");
-  pyc.g.save();
-  pyc.g.fillStyle = "#ffffff";
-  pyc.g.fillRect(0, 0, 600, 800);
-
-  var img = document.getElementById("image_in");
-  var tmp = document.createElement("canvas");
-  tmp.width = img.width;
-  tmp.height = img.height;
-  var gfx = tmp.getContext("2d");
-  gfx.fillStyle = "#fff";
-  gfx.fillRect(0, 0, tmp.width, tmp.height);
-  gfx.drawImage(img, 0, 0);
-
-  var data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
-  var used = {};
-  for (var i = 0; i < tmp.width; ++i) {
-    if (i % 5 === 0) {
-      pyc.g.save();
-      pyc.g.beginPath();
-      pyc.g.strokeStyle = "#ccc";
-      pyc.g.moveTo(z * i * 2 + 0.5, 0.5);
-      pyc.g.lineTo(z * i * 2 + 0.5, z * tmp.height * 2 + 0.5);
-      pyc.g.closePath();
-      pyc.g.stroke();
-      pyc.g.restore();
-    }
-    
-    for (var j = 0; j < tmp.height; ++j) {
-      if ((i === 0) && (j % 5 === 0)) {
-        pyc.g.save();
-        pyc.g.beginPath();
-        pyc.g.strokeStyle = "#ccc";
-        pyc.g.moveTo(0.5, z * j * 2 + 0.5);
-        pyc.g.lineTo(z * tmp.width * 2 + 0.5, z * j * 2 + 0.5);
-        pyc.g.closePath();
-        pyc.g.stroke();
-        pyc.g.restore();
-      }
-      
-      var didx = 4 * (j * tmp.width + i);
-      var r = data[didx];
-      var g = data[didx + 1];
-      var b = data[didx + 2];
-      var a = data[didx + 3];
-
-      var conv = pyc.convert(r, g, b, cols);
-      pyc.g.fillStyle = (i + j) % 2 === 0 ? "#ffffff" : "#eeeeee";
-      pyc.g.fillRect(z * i * 2 + 0.5, z * j * 2 + 0.5, z * 2, z * 2);
-      
-      for (var e = 0; e < 4; ++e) {
-        var de = Math.floor(e / 2);
-        var col = (e < conv.length ? conv[e].col : "#000000");
-        var colname = conv[e].name;
-        if (col === "#fff") {
-          continue;
-        }
-        if (used[colname] === undefined) {
-          used[colname] = 1;
-        } else {
-          ++used[colname];
-        }
-        pyc.g.fillStyle = col;
-        // Discs
-        pyc.g.beginPath();
-        pyc.g.arc(z * (i * 2 + (e % 2) + 0.5), z * (j * 2 + de + 0.5), z / 2, 0, Math.PI * 2, true);
-        pyc.g.fill();
-      }
-    }
-  }
-  pyc.g.restore();
-  var total = 0;
-  var max = 0;
-  for (var k in used) {
-    console.log(k + ": " + used[k]);
-    total += used[k];
-    max = Math.max(max, used[k]);
-  }
-  console.log("Total: " + total);
-  console.log("You need " + Math.ceil(max / 88) + " packs");
-};
-
+// All known color palettes
 pyc.COLS = {};
 pyc.COLS.CMYRGBW = [{ col: "#ff0", r: 0, g: 0, b: 255 },
                     { col: "#0ff", r: 255, g: 0, b: 0 },
@@ -128,6 +42,99 @@ pyc.COLS.GOM7 = [{ name: "blue",   col: "#09f", r: 255, g: 111, b: 0 },
                  { name: "-none-", col: "#fff", r: 0, g: 0, b: 0 }
                 ];
 
+pyc.convert_image = function() {
+  var z = parseInt(document.getElementById("gsize").value);
+  var palette = document.getElementById("palette").value;
+  var cols = pyc.COLS[palette];
+
+  var viewport = document.getElementById("viewport");
+  var img = document.getElementById("image_in");
+  var width = img.width;
+  var height = img.height;
+  viewport.width = width * z * 2;
+  viewport.height = height * z * 2;
+  var gx = viewport.getContext("2d");
+  gx.save();
+  gx.fillStyle = "#ffffff";
+  gx.fillRect(0, 0, width * z * 2, height * z * 2);
+
+  var tmp = document.createElement("canvas");
+  tmp.width = width;
+  tmp.height = height;
+  var gfx = tmp.getContext("2d");
+  gfx.fillStyle = "#fff";
+  gfx.fillRect(0, 0, tmp.width, tmp.height);
+  gfx.drawImage(img, 0, 0);
+
+  var data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
+  var used = {};
+  for (var i = 0; i < tmp.width; ++i) {
+    if (i % 5 === 0) {
+      gx.save();
+      gx.beginPath();
+      gx.strokeStyle = "#ccc";
+      gx.moveTo(z * i * 2 + 0.5, 0.5);
+      gx.lineTo(z * i * 2 + 0.5, z * tmp.height * 2 + 0.5);
+      gx.closePath();
+      gx.stroke();
+      gx.restore();
+    }
+    
+    for (var j = 0; j < tmp.height; ++j) {
+      if ((i === 0) && (j % 5 === 0)) {
+        gx.save();
+        gx.beginPath();
+        gx.strokeStyle = "#ccc";
+        gx.moveTo(0.5, z * j * 2 + 0.5);
+        gx.lineTo(z * tmp.width * 2 + 0.5, z * j * 2 + 0.5);
+        gx.closePath();
+        gx.stroke();
+        gx.restore();
+      }
+      
+      var didx = 4 * (j * tmp.width + i);
+      var r = data[didx];
+      var g = data[didx + 1];
+      var b = data[didx + 2];
+      var a = data[didx + 3];
+
+      var conv = pyc.convert(r, g, b, cols);
+      gx.fillStyle = (i + j) % 2 === 0 ? "#ffffff" : "#eeeeee";
+      gx.fillRect(z * i * 2 + 0.5, z * j * 2 + 0.5, z * 2, z * 2);
+      
+      for (var e = 0; e < 4; ++e) {
+        var de = Math.floor(e / 2);
+        var col = (e < conv.length ? conv[e].col : "#000000");
+        var colname = conv[e].name;
+        if (col === "#fff") {
+          continue;
+        }
+        if (used[colname] === undefined) {
+          used[colname] = 1;
+        } else {
+          ++used[colname];
+        }
+        gx.fillStyle = col;
+        // Discs
+        gx.beginPath();
+        gx.arc(z * (i * 2 + (e % 2) + 0.5), z * (j * 2 + de + 0.5), z / 2, 0, Math.PI * 2, true);
+        gx.fill();
+      }
+    }
+  }
+  gx.restore();
+  var total = 0;
+  var max = 0;
+  for (var k in used) {
+    console.log(k + ": " + used[k]);
+    total += used[k];
+    max = Math.max(max, used[k]);
+  }
+  console.log("Total: " + total);
+  console.log("You need " + Math.ceil(max / 88) + " packs");
+};
+
+// Convert one color in RGB format to a set of at most four colors from the given palette
 pyc.convert = function(r, g, b, cols) {
   var ret = [];
   var clen = cols.length;
@@ -154,11 +161,35 @@ pyc.convert = function(r, g, b, cols) {
 pyc.refresh = function() {
   var input = document.getElementById("source_image")
   var value = input.value;
+  pyc.change_image(value);
+}
+
+pyc.change_image = function(img_src) {
   var image = document.getElementById("image_in");
   if (!image.onload) {
-    image.onload = pyc.start;
+    image.onload = pyc.convert_image;
   }
-  image.src = value;
+  image.src = img_src;
+};
+
+pyc.upload = function() {
+  var files = document.getElementById("upload").files;
+  if (files.length !== 1) {
+    alert("Shoud have uploaded exactly one file.");
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(f) {
+    pyc.change_image(reader.result);
+  };
+  reader.readAsDataURL(files[0]);
+  alert("Uploading file");
+};
+
+
+pyc.start = function() {
+  //document.getElementById("upload").addEventListener("change", pyc.upload);
+  pyc.convert_image();
 };
 
 window.onload = pyc.start;

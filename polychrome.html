@@ -2,10 +2,16 @@
 <html>
   <head>
     <style>
+*
+{
+  font-family: Verdana, Helvetica, sans;
+}
+
 canvas
 {
   border: 1px solid #BBB;
 }
+
     </style>
     <script src="polychrome.js"></script>
   </head>
@@ -30,7 +36,8 @@ canvas
       <option value="9">9</option>
       <option value="10">10</option>
       </select>
-    File:
+    <br>
+    Predefined file:
     <select id="source_image" onchange="pyc.refresh()">
       <option>mario-small.png</option>
       <option>mario.png</option>
@@ -41,6 +48,8 @@ canvas
       <option>sonic.png</option>
       <option>monalisa.png</option>
     </select>
+    or upload your own:
+    <input type="file" id="upload" onchange="pyc.upload()"></input>
     <!--input id="source_image" type="text" onchange="pyc.refresh()" style="width: 500px"
            value="mario-small.png"-->
 
@@ -48,6 +57,8 @@ canvas
     <br>
     <img src="mario-small.png" id="image_in"></img><br>
     <!--img src="firefox-logo.png" id="image_in"></img><br-->
-    <canvas width="600" height="800" id="viewport">Canvas not supported</canvas>
+    <div style="right: 5px; height: 100%; overflow: auto">
+      <canvas width="600" height="800" id="viewport">Canvas not supported</canvas>
+    </div>
   </body>
 </html>
