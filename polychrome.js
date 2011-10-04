@@ -54,6 +54,9 @@ pyc.convert_image = function() {
     return;
   }
   pyc.conversion_running = true;
+  var needed = document.getElementById("needed");
+  needed.innerHTML = "Sticker needed: computing...";
+  
   var z = parseInt(document.getElementById("gsize").value);
   var zoom = parseFloat(document.getElementById("zoom").value);
   var palette = document.getElementById("palette").value;
@@ -110,10 +113,11 @@ pyc.convert_image = function() {
 
 pyc.do_conversion = function(src, data, cols, gx, z) {
   var size = src.width * src.height;
-  pyc.do_conversion_chunk(src, data, cols, gx, z, size, 0, 100);
+  var used = {};
+  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100);
 };
 
-pyc.do_conversion_chunk = function(src, data, cols, gx, z, size, start_t, end_t) {
+pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, end_t) {
   if (pyc.stop_conversion) {
     pyc.stop_conversion = false;
     pyc.conversion_running = false;
@@ -141,6 +145,11 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, size, start_t, end_t)
       if (col === "#fff") {
         continue;
       }
+      if (used[col] === undefined) {
+        used[col] = 0;
+      }
+      used[col] += 1;
+      
       gx.fillStyle = col;
       // Discs
       gx.beginPath();
@@ -151,10 +160,19 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, size, start_t, end_t)
   if (t < size) {
     // Launch the following conversion asynchronously
     setTimeout(function() {
-        pyc.do_conversion_chunk(src, data, cols, gx, z, size, end_t, end_t + end_t - start_t);
+      pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, end_t, end_t + end_t - start_t);
       }, 0);
   } else {
     pyc.conversion_running = false;
+    var needed = document.getElementById("needed");
+    var text = "";
+    for (var k in used) {
+      if (text.length > 0) {
+        text += ", "
+      }
+      text += "<span style=\"font-size: 200%; color: " + k + "\">\u25cf</span> " + used[k];
+    }
+    needed.innerHTML = "Stickers needed: " + text;
   }
 };
 
