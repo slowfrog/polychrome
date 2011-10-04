@@ -217,8 +217,17 @@ pyc.change_image = function(img_src) {
 
 pyc.upload = function() {
   var files = document.getElementById("upload").files;
+  if (!files) {
+    alert("Sorry! I am not able to read the uploaded file from your browser!");
+    return;
+  }
   if (files.length !== 1) {
     alert("Shoud have uploaded exactly one file.");
+    return;
+  }
+  if ((window["FileReader"] === undefined) ||
+      !(FileReader instanceof Function)) {
+    alert("Sorry! No FileReader available on your browser!");
     return;
   }
   var reader = new FileReader();
