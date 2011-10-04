@@ -226,7 +226,7 @@ pyc.upload = function() {
     return;
   }
   if ((window["FileReader"] === undefined) ||
-      !(FileReader instanceof Function)) {
+      (typeof FileReader !== "function")) {
     alert("Sorry! No FileReader available on your browser!");
     return;
   }
