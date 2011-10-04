@@ -1,3 +1,4 @@
+"use strict";
 var pyc = {};
 
 // All known color palettes
@@ -67,7 +68,6 @@ pyc.convert_image = function() {
   gfx.drawImage(img, 0, 0);
 
   var data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
-  var used = {};
   for (var i = 0; i < tmp.width; ++i) {
     if (i % 5 === 0) {
       gx.save();
@@ -91,48 +91,55 @@ pyc.convert_image = function() {
         gx.stroke();
         gx.restore();
       }
-      
-      var didx = 4 * (j * tmp.width + i);
-      var r = data[didx];
-      var g = data[didx + 1];
-      var b = data[didx + 2];
-      var a = data[didx + 3];
-
-      var conv = pyc.convert(r, g, b, cols);
-      gx.fillStyle = (i + j) % 2 === 0 ? "#ffffff" : "#eeeeee";
-      gx.fillRect(z * i * 2 + 0.5, z * j * 2 + 0.5, z * 2, z * 2);
-      
-      for (var e = 0; e < 4; ++e) {
-        var de = Math.floor(e / 2);
-        var col = (e < conv.length ? conv[e].col : "#000000");
-        var colname = conv[e].name;
-        if (col === "#fff") {
-          continue;
-        }
-        if (used[colname] === undefined) {
-          used[colname] = 1;
-        } else {
-          ++used[colname];
-        }
-        gx.fillStyle = col;
-        // Discs
-        gx.beginPath();
-        gx.arc(z * (i * 2 + (e % 2) + 0.5), z * (j * 2 + de + 0.5), z / 2, 0, Math.PI * 2, true);
-        gx.fill();
-      }
     }
   }
-  gx.restore();
-  var total = 0;
-  var max = 0;
-  for (var k in used) {
-    console.log(k + ": " + used[k]);
-    total += used[k];
-    max = Math.max(max, used[k]);
-  }
-  console.log("Total: " + total);
-  console.log("You need " + Math.ceil(max / 88) + " packs");
+  pyc.do_conversion(tmp, data, cols, gx, z);
 };
+
+
+pyc.do_conversion = function(src, data, cols, gx, z) {
+  var size = src.width * src.height;
+  pyc.do_conversion_chunk(src, data, cols, gx, z, size, 0, 100);
+};
+
+pyc.do_conversion_chunk = function(src, data, cols, gx, z, size, start_t, end_t) {
+  var t;
+  var max_t = Math.min(size, end_t);
+  for (t = start_t; t < max_t; ++t) {
+    var j = Math.floor(t / src.width);
+    var i = t - j * src.width;
+    var didx = 4 * t;
+    var r = data[didx];
+    var g = data[didx + 1];
+    var b = data[didx + 2];
+    var a = data[didx + 3];
+    
+    var conv = pyc.convert(r, g, b, cols);
+    gx.fillStyle = (i + j) % 2 === 0 ? "#ffffff" : "#eeeeee";
+    gx.fillRect(z * i * 2 + 0.5, z * j * 2 + 0.5, z * 2, z * 2);
+    
+    for (var e = 0; e < 4; ++e) {
+      var de = Math.floor(e / 2);
+      var col = (e < conv.length ? conv[e].col : "#000000");
+      var colname = conv[e].name;
+      if (col === "#fff") {
+        continue;
+      }
+      gx.fillStyle = col;
+      // Discs
+      gx.beginPath();
+      gx.arc(z * (i * 2 + (e % 2) + 0.5), z * (j * 2 + de + 0.5), z / 2, 0, Math.PI * 2, true);
+      gx.fill();
+    }
+  }
+  if (t < size) {
+    // Launch the following conversion asynchronously
+    setTimeout(function() {
+        pyc.do_conversion_chunk(src, data, cols, gx, z, size, end_t, end_t + end_t - start_t);
+      }, 0);
+  }
+};
+
 
 // Convert one color in RGB format to a set of at most four colors from the given palette
 pyc.convert = function(r, g, b, cols) {
