@@ -43,7 +43,17 @@ pyc.COLS.GOM7 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
                  { name: "-none-", col: "#fff", r:   0, g:   0, b:   0 }
                 ];
 
+pyc.conversion_running = false;
+pyc.stop_conversion = false;
+
 pyc.convert_image = function() {
+  if (pyc.conversion_running) {
+    pyc.stop_conversion = true;
+    // Retry in one second, once the current conversion has been stopped
+    setTimeout(pyc.convert_image, 1000);
+    return;
+  }
+  pyc.conversion_running = true;
   var z = parseInt(document.getElementById("gsize").value);
   var zoom = parseInt(document.getElementById("zoom").value);
   var palette = document.getElementById("palette").value;
@@ -104,6 +114,11 @@ pyc.do_conversion = function(src, data, cols, gx, z) {
 };
 
 pyc.do_conversion_chunk = function(src, data, cols, gx, z, size, start_t, end_t) {
+  if (pyc.stop_conversion) {
+    pyc.stop_conversion = false;
+    pyc.conversion_running = false;
+    return;
+  }
   var t;
   var max_t = Math.min(size, end_t);
   for (t = start_t; t < max_t; ++t) {
@@ -138,6 +153,8 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, size, start_t, end_t)
     setTimeout(function() {
         pyc.do_conversion_chunk(src, data, cols, gx, z, size, end_t, end_t + end_t - start_t);
       }, 0);
+  } else {
+    pyc.conversion_running = false;
   }
 };
 
