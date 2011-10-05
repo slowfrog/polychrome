@@ -33,6 +33,14 @@ pyc.COLS.GOM4 = [{ name: "yellow", col: "#ee0", r:  17, g:  17, b: 255 },
                  { name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
                  { name: "-none-", col: "#fff", r:   0, g:   0, b:   0 }];
 
+pyc.COLS.GOM5 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
+                 { name: "yellow", col: "#ee0", r:  17, g:  17, b: 255 },
+                 { name: "green",  col: "#080", r: 255, g: 119, b: 255 },
+                 { name: "black",  col: "#000", r: 255, g: 255, b: 255 },
+                 { name: "red",    col: "#c00", r:  51, g: 255, b: 255 },
+                 { name: "-none-", col: "#fff", r:   0, g:   0, b:   0 }
+                ];
+
 pyc.COLS.GOM7 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
                  { name: "yellow", col: "#ee0", r:  17, g:  17, b: 255 },
                  { name: "orange", col: "#d92", r:  34, g: 102, b: 221 },
@@ -166,13 +174,18 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
     pyc.conversion_running = false;
     var needed = document.getElementById("needed");
     var text = "";
+    var total = 0;
     for (var k in used) {
       if (text.length > 0) {
         text += ", "
       }
       text += "<span style=\"font-size: 200%; color: " + k + "\">\u25cf</span> " + used[k];
+      total += used[k];
     }
-    needed.innerHTML = "Stickers needed: " + text;
+    var unitprice = parseFloat(document.getElementById("price").value);
+    var price = unitprice ? (", price: "+ unitprice * total) : "";
+    needed.innerHTML = ("Stickers needed: " + text + "<br>"+
+                        "Total: " + total + price + ", Size: " + src.width + "x" + src.height);
   }
 };
 
