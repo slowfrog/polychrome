@@ -34,10 +34,16 @@ canvas
 
 
     <br>
+    Background: <select id="back" onchange="pyc.start()">
+      <option value="#ffffff" selected="selected">white</option>
+      <option value="#000000">black</option>
+      </select>
     Palette: <select id="palette" onchange="pyc.start()">
       <option value="GOM4">4-colors</option>
       <option value="GOM5" selected="selected">5-colors</option>
+      <option value="GOM6">6-colors</option>
       <option value="GOM7">7-colors</option>
+      <option value="GOM8">8-colors</option>
       <option value="CMYRGBW">CMYRGB</option>
       <option value="YRGBW">YRGB</option>
       <option value="CMYW">CMY</option>
@@ -54,6 +60,8 @@ canvas
       <option value="8">8</option>
       <option value="9">9</option>
       <option value="10">10</option>
+      <option value="15">15</option>
+      <option value="20">20</option>
       </select>
     Zoom out: <select id="zoom" onchange="pyc.start()">
       <option value="1">1</option>

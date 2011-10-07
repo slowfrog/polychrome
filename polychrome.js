@@ -30,15 +30,21 @@ pyc.COLS.RGBW = [ { col: "#f00", r: 0, g: 255, b: 255 },
 pyc.COLS.GOM4 = [{ name: "yellow", col: "#ee0", r:  17, g:  17, b: 255 },
                  { name: "red",    col: "#c00", r:  51, g: 255, b: 255 },
                  { name: "green",  col: "#080", r: 255, g: 119, b: 255 },
-                 { name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
-                 { name: "-none-", col: "#fff", r:   0, g:   0, b:   0 }];
+                 { name: "blue",   col: "#09f", r: 255, g: 102, b:   0 }];
 
 pyc.COLS.GOM5 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
                  { name: "yellow", col: "#ee0", r:  17, g:  17, b: 255 },
                  { name: "green",  col: "#080", r: 255, g: 119, b: 255 },
                  { name: "black",  col: "#000", r: 255, g: 255, b: 255 },
+                 { name: "red",    col: "#c00", r:  51, g: 255, b: 255 }
+                ];
+
+pyc.COLS.GOM6 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
+                 { name: "yellow", col: "#ee0", r:  17, g:  17, b: 255 },
+                 { name: "green",  col: "#080", r: 255, g: 119, b: 255 },
+                 { name: "black",  col: "#000", r: 255, g: 255, b: 255 },
                  { name: "red",    col: "#c00", r:  51, g: 255, b: 255 },
-                 { name: "-none-", col: "#fff", r:   0, g:   0, b:   0 }
+                 { name: "white",  col: "#fff", r:   0, g:   0, b:   0 }
                 ];
 
 pyc.COLS.GOM7 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
@@ -47,8 +53,17 @@ pyc.COLS.GOM7 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
                  { name: "pink",   col: "#e08", r:  17, g: 255, b: 119 },
                  { name: "green",  col: "#080", r: 255, g: 119, b: 255 },
                  { name: "violet", col: "#408", r: 187, g: 255, b: 119 },
+                 { name: "red",    col: "#c00", r:  51, g: 255, b: 255 }
+                ];
+
+pyc.COLS.GOM8 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
+                 { name: "yellow", col: "#ee0", r:  17, g:  17, b: 255 },
+                 { name: "orange", col: "#d92", r:  34, g: 102, b: 221 },
+                 { name: "pink",   col: "#e08", r:  17, g: 255, b: 119 },
+                 { name: "green",  col: "#080", r: 255, g: 119, b: 255 },
+                 { name: "violet", col: "#408", r: 187, g: 255, b: 119 },
                  { name: "red",    col: "#c00", r:  51, g: 255, b: 255 },
-                 { name: "-none-", col: "#fff", r:   0, g:   0, b:   0 }
+                 { name: "white",  col: "#fff", r:   0, g:   0, b:   0 }
                 ];
 
 pyc.conversion_running = false;
@@ -68,24 +83,32 @@ pyc.convert_image = function() {
   var z = parseInt(document.getElementById("gsize").value);
   var zoom = parseFloat(document.getElementById("zoom").value);
   var palette = document.getElementById("palette").value;
-  var cols = pyc.COLS[palette];
+  var cols = pyc.COLS[palette].slice(0); // Copy array
+  var back = document.getElementById("back").value;
+  var altback = back === "#ffffff" ? "#eeeeee" : "#222222";
+  if (back === "#ffffff") {
+    cols.push({name: "-none-", col: back, r: 0, g: 0, b: 0});
+  } else {
+    cols.push({name: "-none-", col: back, r: 255, g: 255, b: 255});
+  }
 
   var viewport = document.getElementById("viewport");
   var img = document.getElementById("image_in");
   var width = img.width;
   var height = img.height;
+  img.style.backgroundColor = back;
   viewport.width = Math.ceil(width / zoom) * z * 2;
   viewport.height = Math.ceil(height / zoom) * z * 2;
   var gx = viewport.getContext("2d");
   gx.save();
-  gx.fillStyle = "#ffffff";
+  gx.fillStyle = back;
   gx.fillRect(0, 0, width * z * 2, height * z * 2);
 
   var tmp = document.createElement("canvas");
   tmp.width = Math.ceil(width / zoom);
   tmp.height = Math.ceil(height / zoom);
   var gfx = tmp.getContext("2d");
-  gfx.fillStyle = "#fff";
+  gfx.fillStyle = back;
   gfx.fillRect(0, 0, tmp.width, tmp.height);
   gfx.drawImage(img, 0, 0, width, height, 0, 0, tmp.width, tmp.height);
 
@@ -115,17 +138,17 @@ pyc.convert_image = function() {
       }
     }
   }
-  pyc.do_conversion(tmp, data, cols, gx, z);
+  pyc.do_conversion(tmp, data, cols, gx, z, back, altback);
 };
 
 
-pyc.do_conversion = function(src, data, cols, gx, z) {
+pyc.do_conversion = function(src, data, cols, gx, z, back, altback) {
   var size = src.width * src.height;
   var used = {};
-  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100);
+  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back, altback);
 };
 
-pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, end_t) {
+pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, end_t, back, altback) {
   if (pyc.stop_conversion) {
     pyc.stop_conversion = false;
     pyc.conversion_running = false;
@@ -143,14 +166,14 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
     var a = data[didx + 3];
     
     var conv = pyc.convert(r, g, b, cols);
-    gx.fillStyle = (i + j) % 2 === 0 ? "#ffffff" : "#eeeeee";
+    gx.fillStyle = (i + j) % 2 === 0 ? back : altback;
     gx.fillRect(z * i * 2 + 0.5, z * j * 2 + 0.5, z * 2, z * 2);
     
     for (var e = 0; e < 4; ++e) {
       var de = Math.floor(e / 2);
       var col = (e < conv.length ? conv[e].col : "#000000");
       var colname = conv[e].name;
-      if (col === "#fff") {
+      if (colname === "-none-") {
         continue;
       }
       if (used[col] === undefined) {
@@ -168,7 +191,8 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
   if (t < size) {
     // Launch the following conversion asynchronously
     setTimeout(function() {
-      pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, end_t, end_t + end_t - start_t);
+      pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, end_t, end_t + end_t - start_t,
+                              back, altback);
       }, 0);
   } else {
     pyc.conversion_running = false;
@@ -192,8 +216,19 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
 
 // Convert one color in RGB format to a set of at most four colors from the given palette
 pyc.convert = function(r, g, b, cols) {
-  var ret = [];
   var clen = cols.length;
+  // Check if color is same as '-none-' to avoid using stickers in that case
+  for (var c = 0; c < clen; ++c) {
+    var col = cols[c];
+    if ((col.name === "-none-") &&
+        (r === (255 - col.r)) &&
+        (g === (255 - col.g)) &&
+        (b === (255 - col.b))) {
+      return [col, col, col, col];
+    }
+  }
+  
+  var ret = [];
   var mindist = 72 * 255;
   for (var a00 = 0; a00 < clen; ++a00) {
     for (var a10 = 0; a10 < clen; ++a10) {
