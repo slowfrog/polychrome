@@ -69,6 +69,8 @@ pyc.COLS.GOM8 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
 pyc.conversion_running = false;
 pyc.stop_conversion = false;
 
+pyc.Y_FACTOR = Math.sqrt(3) / 2;
+
 pyc.convert_image = function() {
   if (pyc.conversion_running) {
     pyc.stop_conversion = true;
@@ -91,14 +93,15 @@ pyc.convert_image = function() {
   } else {
     cols.push({name: "-none-", col: back, r: 255, g: 255, b: 255});
   }
+  var hex = document.getElementById("grid").value === "3";
 
   var viewport = document.getElementById("viewport");
   var img = document.getElementById("image_in");
   var width = img.width;
   var height = img.height;
   img.style.backgroundColor = back;
-  viewport.width = Math.ceil(width / zoom) * z * 2;
-  viewport.height = Math.ceil(height / zoom) * z * 2;
+  viewport.width = (1 + Math.ceil(width / zoom)) * z * (hex ? 1.5 : 2);
+  viewport.height = (1 + Math.ceil(height / zoom)) * z * 2 * (hex ? pyc.Y_FACTOR : 1);
   var gx = viewport.getContext("2d");
   gx.save();
   gx.fillStyle = back;
@@ -138,17 +141,18 @@ pyc.convert_image = function() {
       }
     }
   }
-  pyc.do_conversion(tmp, data, cols, gx, z, back, altback);
+  pyc.do_conversion(tmp, data, cols, gx, z, back, altback, hex);
 };
 
 
-pyc.do_conversion = function(src, data, cols, gx, z, back, altback) {
+pyc.do_conversion = function(src, data, cols, gx, z, back, altback, hex) {
   var size = src.width * src.height;
   var used = {};
-  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back, altback);
+  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back, altback, hex);
 };
 
-pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, end_t, back, altback) {
+pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, end_t, back,
+                                   altback, hex) {
   if (pyc.stop_conversion) {
     pyc.stop_conversion = false;
     pyc.conversion_running = false;
@@ -164,12 +168,15 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
     var g = data[didx + 1];
     var b = data[didx + 2];
     var a = data[didx + 3];
+    var cx, cy;
     
-    var conv = pyc.convert(r, g, b, cols);
+    var conv = hex ? pyc.convert3(r, g, b, cols) : pyc.convert(r, g, b, cols);
     gx.fillStyle = (i + j) % 2 === 0 ? back : altback;
-    gx.fillRect(z * i * 2 + 0.5, z * j * 2 + 0.5, z * 2, z * 2);
+    if (!hex) {
+      gx.fillRect(z * i * 2 + 0.5, z * j * 2 + 0.5, z * 2, z * 2);
+    }
     
-    for (var e = 0; e < 4; ++e) {
+    for (var e = 0; e < conv.length; ++e) {
       var de = Math.floor(e / 2);
       var col = (e < conv.length ? conv[e].col : "#000000");
       var colname = conv[e].name;
@@ -184,7 +191,31 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
       gx.fillStyle = col;
       // Discs
       gx.beginPath();
-      gx.arc(z * (i * 2 + (e % 2) + 0.5), z * (j * 2 + de + 0.5), z / 2, 0, Math.PI * 2, true);
+      if (hex) {
+        if (i % 2 === 0) {
+          if (e < 2) {
+            cx = i * 1.5 + e + 0.5;
+            cy = j * 2 * pyc.Y_FACTOR + 0.5;
+          } else {
+            cx = i * 1.5 + e - 2 + 1;
+            cy = j * 2 * pyc.Y_FACTOR + 0.5 + pyc.Y_FACTOR;
+          }
+          
+        } else {
+          if (e < 1) {
+            cx = i * 1.5 + e + 1;
+            cy = j * 2 * pyc.Y_FACTOR + 0.5;
+          } else {
+            cx = i * 1.5 + e - 1 + 0.5;
+            cy = j * 2 * pyc.Y_FACTOR + 0.5 + pyc.Y_FACTOR;
+          }
+        }
+        
+      } else {
+        cx = (i * 2 + (e % 2) + 0.5);
+        cy = (j * 2 + de + 0.5);
+      }
+      gx.arc(z * cx, z * cy, z / 2, 0, Math.PI * 2, true);
       gx.fill();
     }
   }
@@ -192,7 +223,7 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
     // Launch the following conversion asynchronously
     setTimeout(function() {
       pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, end_t, end_t + end_t - start_t,
-                              back, altback);
+                              back, altback, hex);
       }, 0);
   } else {
     pyc.conversion_running = false;
@@ -242,6 +273,39 @@ pyc.convert = function(r, g, b, cols) {
             mindist = dist;
             ret = [ cols[a00], cols[a10], cols[a01], cols[a11] ];
           }
+        }
+      }
+    }
+  }
+  return ret;
+};
+
+// Convert one color in RGB format to a set of at most three colors from the given palette
+pyc.convert3 = function(r, g, b, cols) {
+  var clen = cols.length;
+  // Check if color is same as '-none-' to avoid using stickers in that case
+  for (var c = 0; c < clen; ++c) {
+    var col = cols[c];
+    if ((col.name === "-none-") &&
+        (r === (255 - col.r)) &&
+        (g === (255 - col.g)) &&
+        (b === (255 - col.b))) {
+      return [col, col, col, col];
+    }
+  }
+  
+  var ret = [];
+  var mindist = 72 * 255;
+  for (var a00 = 0; a00 < clen; ++a00) {
+    for (var a10 = 0; a10 < clen; ++a10) {
+      for (var a01 = 0; a01 < clen; ++a01) {
+        var vr = 765 - (cols[a00].r + cols[a10].r + cols[a01].r);
+        var vg = 765 - (cols[a00].g + cols[a10].g + cols[a01].g);
+        var vb = 765 - (cols[a00].b + cols[a10].b + cols[a01].b);
+        var dist = 2 * Math.abs(vr - r * 3) + 3 * Math.abs(vg - g * 3) + Math.abs(vb - b * 3);
+        if ((dist < mindist) || ((dist === mindist) && (Math.random() < 0.5))) {
+          mindist = dist;
+          ret = [ cols[a00], cols[a10], cols[a01] ];
         }
       }
     }

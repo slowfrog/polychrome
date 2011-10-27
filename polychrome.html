@@ -48,7 +48,7 @@ canvas
       <option value="YRGBW">YRGB</option>
       <option value="CMYW">CMY</option>
       <option value="RGBW">RGB</option>
-</select>
+    </select>
     Sticker Size: <select id="gsize" onchange="pyc.start()">
       <option value="1">1</option>
       <option value="2">2</option>
@@ -73,6 +73,11 @@ canvas
       <option value="8">8</option>
       <option value="16">16</option>
       </select>
+    <br>
+    Grid: <select id="grid" onchange="pyc.start()">
+      <option value="4" sekected="selected">square</option>
+      <option value="3">hex</option>
+    </select>
     Sticker unit price: <input id="price"></input>
     <br>
     <img src="mario-small.png" id="image_in"></img><p id="needed"></p>
