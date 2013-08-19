@@ -39,11 +39,11 @@ pyc.COLS.GOM5 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
                  { name: "red",    col: "#c00", r:  51, g: 255, b: 255 }
                 ];
 
-pyc.COLS.RUBIKS = [{ name: "blue",   col: "#003373", r: 255, g: 204, b: 140 },
-                   { name: "red",    col: "#8c000f", r: 115, g: 255, b: 240 },
-                   { name: "yellow", col: "#ffd200", r:   0, g:  45, b: 255 },
-                   { name: "green",  col: "#00732f", r: 255, g: 140, b: 208 },
-                   { name: "orange", col: "#ff4600", r:   0, g: 185, b: 255 },
+pyc.COLS.RUBIKS = [{ name: "blue",   col: "#0051ba", r: 255, g: 174, b:  69 },
+                   { name: "red",    col: "#c41e3a", r:  61, g: 225, b: 197 },
+                   { name: "yellow", col: "#ffd500", r:   0, g:  42, b: 255 },
+                   { name: "green",  col: "#009e60", r: 255, g:  97, b: 149 },
+                   { name: "orange", col: "#ff5800", r:   0, g: 167, b: 255 },
                    { name: "white",  col: "#ffffff", r:   0, g:   0, b:   0 }
                   ];
 
