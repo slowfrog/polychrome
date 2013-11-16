@@ -26,6 +26,7 @@ canvas
       <option>tomcat-logo.png</option>
       <option>sonic.png</option>
       <option>monalisa.png</option>
+      <option selected="selected">SmallAndStarry.png</option>
     </select>
     or upload your own:
     <input type="file" id="upload" onchange="pyc.upload()"></input>
@@ -35,13 +36,13 @@ canvas
 
     <br>
     Background: <select id="back" onchange="pyc.start()">
-      <option value="#ffffff" selected="selected">white</option>
+      <option value="#ffffff">white</option>
       <option value="#000000">black</option>
+      <option value="" selected="selected">none (fill all)</option>
       </select>
     Palette: <select id="palette" onchange="pyc.start()">
       <option value="GOM4">4-colors</option>
-      <option value="GOM5" selected="selected">5-colors</option>
-      <option value="RUBIKS">Rubik's</option>
+      <option value="GOM5">5-colors</option>
       <option value="GOM6">6-colors</option>
       <option value="GOM7">7-colors</option>
       <option value="GOM8">8-colors</option>
@@ -49,6 +50,7 @@ canvas
       <option value="YRGBW">YRGB</option>
       <option value="CMYW">CMY</option>
       <option value="RGBW">RGB</option>
+      <option value="LEGO" selected="selected">LEGO</option>
     </select>
     Sticker Size: <select id="gsize" onchange="pyc.start()">
       <option value="1">1</option>
@@ -71,17 +73,19 @@ canvas
       <option value="2">2</option>
       <option value="3">3</option>
       <option value="4">4</option>
-      <option value="8">8</option>
+      <option value="6">6</option>
+      <option value="8" selected="selected">8</option>
       <option value="16">16</option>
       </select>
     <br>
     Grid: <select id="grid" onchange="pyc.start()">
-      <option value="4" sekected="selected">square</option>
+      <option value="4">square</option>
       <option value="3">hex</option>
+      <option value="L" selected="selected">Lego 3-stack</option>
     </select>
     Sticker unit price: <input id="price"></input>
     <br>
-    <img src="mario-small.png" id="image_in"></img><p id="needed"></p>
+    <img src="SmallAndStarry.png" id="image_in"></img><p id="needed"></p>
     <!--img src="firefox-logo.png" id="image_in"></img><br-->
     <div style="right: 5px; height: 100%; overflow: auto">
       <canvas width="600" height="800" id="viewport">Canvas not supported</canvas>

@@ -39,14 +39,6 @@ pyc.COLS.GOM5 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
                  { name: "red",    col: "#c00", r:  51, g: 255, b: 255 }
                 ];
 
-pyc.COLS.RUBIKS = [{ name: "blue",   col: "#0051ba", r: 255, g: 174, b:  69 },
-                   { name: "red",    col: "#c41e3a", r:  61, g: 225, b: 197 },
-                   { name: "yellow", col: "#ffd500", r:   0, g:  42, b: 255 },
-                   { name: "green",  col: "#009e60", r: 255, g:  97, b: 149 },
-                   { name: "orange", col: "#ff5800", r:   0, g: 167, b: 255 },
-                   { name: "white",  col: "#ffffff", r:   0, g:   0, b:   0 }
-                  ];
-
 pyc.COLS.GOM6 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
                  { name: "yellow", col: "#ee0", r:  17, g:  17, b: 255 },
                  { name: "green",  col: "#080", r: 255, g: 119, b: 255 },
@@ -74,6 +66,24 @@ pyc.COLS.GOM8 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
                  { name: "white",  col: "#fff", r:   0, g:   0, b:   0 }
                 ];
 
+pyc.COLS.LEGO = [{ name: "white",    col: "#ffffff", r:   0, g:   0, b:   0 },
+                 { name: "obrown",   col: "#ff9734", r:   0, g: 104, b: 203 },
+		         { name: "black",    col: "#101010", r: 239, g: 239, b: 239 },
+		         { name: "lgray",    col: "#aeaeae", r:  81, g:  81, b:  81 },
+		         { name: "red",      col: "#ca171a", r:  53, g: 232, b: 229 },
+		         { name: "blue",     col: "#2036d9", r: 223, g: 201, b:  38 },
+		         { name: "green" ,   col: "#23c43a", r: 220, g:  59, b: 197 },
+		         //{ name: "bordeaux", col: "#802f3e", r: 127, g: 208, b: 193 },
+		         { name: "lavender", col: "#a070b9", r:  95, g: 143, b:  70 },
+		         { name: "beige",    col: "#d1be86", r:  46, g:  65, b: 121 },
+		         { name: "gray",     col: "#757575", r: 138, g: 138, b: 138 },
+		         { name: "dblue",    col: "#0a356f", r: 245, g: 202, b: 144 },
+		         { name: "yellow",   col: "#fce909", r:   3, g:  22, b: 246 },
+		         { name: "brown",    col: "#683f2a", r: 151, g: 192, b: 213 },
+		         //{ name: "lgreen", col: "#b3dc52", r:  76, g:  35, b: 173 },
+		         //{ name: "pink", col: "#ffbaf3", r:   0, g:  69, b:  12 }
+		];
+
 pyc.conversion_running = false;
 pyc.stop_conversion = false;
 
@@ -98,10 +108,11 @@ pyc.convert_image = function() {
   var altback = back === "#ffffff" ? "#eeeeee" : "#222222";
   if (back === "#ffffff") {
     cols.push({name: "-none-", col: back, r: 0, g: 0, b: 0});
-  } else {
+  } else if (back === "#000000") {
     cols.push({name: "-none-", col: back, r: 255, g: 255, b: 255});
   }
   var hex = document.getElementById("grid").value === "3";
+  var lego = document.getElementById("grid").value === "L";
 
   var viewport = document.getElementById("viewport");
   var img = document.getElementById("image_in");
@@ -123,7 +134,15 @@ pyc.convert_image = function() {
   gfx.fillRect(0, 0, tmp.width, tmp.height);
   gfx.drawImage(img, 0, 0, width, height, 0, 0, tmp.width, tmp.height);
 
-  var data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
+  var data;
+  try {
+      data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
+  } catch (e) {
+    // Probably a security error, let's stop
+    console.log(e);
+    pyc.conversion_running = false;
+    return;
+  }
   for (var i = 0; i < tmp.width; ++i) {
     if (i % 5 === 0) {
       gx.save();
@@ -149,18 +168,18 @@ pyc.convert_image = function() {
       }
     }
   }
-  pyc.do_conversion(tmp, data, cols, gx, z, back, altback, hex);
+  pyc.do_conversion(tmp, data, cols, gx, z, back, altback, hex, lego);
 };
 
 
-pyc.do_conversion = function(src, data, cols, gx, z, back, altback, hex) {
+pyc.do_conversion = function(src, data, cols, gx, z, back, altback, hex, lego) {
   var size = src.width * src.height;
   var used = {};
-  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back, altback, hex);
+  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back, altback, hex, lego);
 };
 
 pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, end_t, back,
-                                   altback, hex) {
+                                   altback, hex, lego) {
   if (pyc.stop_conversion) {
     pyc.stop_conversion = false;
     pyc.conversion_running = false;
@@ -178,9 +197,9 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
     var a = data[didx + 3];
     var cx, cy;
     
-    var conv = hex ? pyc.convert3(r, g, b, cols) : pyc.convert(r, g, b, cols);
+    var conv = (hex || lego) ? pyc.convert3(r, g, b, cols) : pyc.convert(r, g, b, cols);
     gx.fillStyle = (i + j) % 2 === 0 ? back : altback;
-    if (!hex) {
+    if (!(hex || lego)) {
       gx.fillRect(z * i * 2 + 0.5, z * j * 2 + 0.5, z * 2, z * 2);
     }
     
@@ -218,12 +237,19 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
             cy = j * 2 * pyc.Y_FACTOR + 0.5 + pyc.Y_FACTOR;
           }
         }
+      } else if (lego) {
+        cx = (i * 2 + 0.5);
+        cy = (j * 2 + e * 2 / 3 + 0.5);
         
       } else {
         cx = (i * 2 + (e % 2) + 0.5);
         cy = (j * 2 + de + 0.5);
       }
-      gx.arc(z * cx, z * cy, z / 2, 0, Math.PI * 2, true);
+      if (!lego) {
+        gx.arc(z * cx, z * cy, z / 2, 0, Math.PI * 2, true);
+      } else {
+        gx.rect(z * cx + 0.5, z * cy + 0.5, z * 2, z * 2 / 3);
+      }
       gx.fill();
     }
   }
@@ -231,7 +257,7 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
     // Launch the following conversion asynchronously
     setTimeout(function() {
       pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, end_t, end_t + end_t - start_t,
-                              back, altback, hex);
+                              back, altback, hex, lego);
       }, 0);
   } else {
     pyc.conversion_running = false;
@@ -249,6 +275,11 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
     var price = unitprice ? (", price: "+ unitprice * total) : "";
     needed.innerHTML = ("Stickers needed: " + text + "<br>"+
                         "Total: " + total + price + ", Size: " + src.width + "x" + src.height);
+    if (lego) {
+      needed.innerHTML += (", actual size: " +
+                           (src.width * 0.8) + "cm x " +
+                           (src.height * 0.9) + "cm");
+    }
   }
 };
 
