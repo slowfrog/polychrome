@@ -175,11 +175,14 @@ pyc.convert_image = function() {
 pyc.do_conversion = function(src, data, cols, gx, z, back, altback, hex, lego) {
   var size = src.width * src.height;
   var used = {};
-  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back, altback, hex, lego);
+  var cat = lego ? pyc.CATALOG : null;
+  var board = lego ? new pyc.board(src.width, src.height * 3) : null;
+  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back, 
+                          altback, hex, lego, cat, board);
 };
 
-pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, end_t, back,
-                                   altback, hex, lego) {
+pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
+                                   end_t, back, altback, hex, lego, cat, board) {
   if (pyc.stop_conversion) {
     pyc.stop_conversion = false;
     pyc.conversion_running = false;
@@ -248,6 +251,8 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
       if (!lego) {
         gx.arc(z * cx, z * cy, z / 2, 0, Math.PI * 2, true);
       } else {
+        var bdef = cat.by_props[pyc.prop_to_prop_id(1, 1, col)];
+        board.put(i, j * 3 + e, bdef);
         gx.rect(z * cx + 0.5, z * cy + 0.5, z * 2, z * 2 / 3);
       }
       gx.fill();
@@ -257,9 +262,10 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
     // Launch the following conversion asynchronously
     setTimeout(function() {
       pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, end_t, end_t + end_t - start_t,
-                              back, altback, hex, lego);
+                              back, altback, hex, lego, cat, board);
       }, 0);
   } else {
+    pyc.BOARD = board;
     pyc.conversion_running = false;
     var needed = document.getElementById("needed");
     var text = "";
@@ -390,6 +396,7 @@ pyc.upload = function() {
 
 
 pyc.start = function() {
+  pyc.catalog.init();
   //document.getElementById("upload").addEventListener("change", pyc.upload);
   pyc.convert_image();
 };
