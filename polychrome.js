@@ -98,7 +98,7 @@ pyc.convert_image = function() {
   }
   pyc.conversion_running = true;
   var needed = document.getElementById("needed");
-  needed.innerHTML = "Sticker needed: computing...";
+  needed.innerHTML = "Sticker/bricks needed: computing...";
   
   var z = parseInt(document.getElementById("gsize").value);
   var zoom = parseFloat(document.getElementById("zoom").value);
@@ -279,12 +279,20 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t,
     }
     var unitprice = parseFloat(document.getElementById("price").value);
     var price = unitprice ? (", price: "+ unitprice * total) : "";
-    needed.innerHTML = ("Stickers needed: " + text + "<br>"+
+    needed.innerHTML = ("Stickers/bricks needed: " + text + "<br>"+
                         "Total: " + total + price + ", Size: " + src.width + "x" + src.height);
     if (lego) {
       needed.innerHTML += (", actual size: " +
                            (src.width * 0.8) + "cm x " +
-                           (src.height * 0.9) + "cm");
+                           (src.height * 0.9) + "cm. Optimizing...");
+      setTimeout(function() {
+        pyc.BOARD.optimize();
+        var stats = pyc.BOARD.stats();
+        document.getElementById("needed").innerHTML += (
+          "<br>Actual brick count: " + stats["count"] +
+          ", price: " + (stats["price"] / 100) + "EUR<br>" +
+          "EUR/pixel: " + (stats["price"] / (100 * pyc.BOARD.w * pyc.BOARD.h)));
+      }, 0);
     }
   }
 };

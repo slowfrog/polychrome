@@ -1,22 +1,5 @@
 "use strict";
 
-pyc.COLORS = ["#ffffff",
-		      "#ff9734",
-		      "#101010",
-		      "#aeaeae",
-		      "#ca171a",
-		      "#2036d9",
-              "#23c43a",
-		      //"#802f3e",
-		      "#a070b9",
-		      "#d1be86",
-		      "#757575",
-		      "#0a356f",
-		      "#fce909",
-		      "#683f2a",
-		      //"#b3dc52",
-		      //"#ffbaf3",
-             ];
 pyc.WIDTHS = [1, 2, 3, 4, 6, 8];
 pyc.HEIGHTS = [1, 3];
 
@@ -33,13 +16,15 @@ pyc.prop_to_brick_id = function(w, h, color) {
   return pyc.prop_to_design_id(w, h) + "-" + color;
 };
 
-pyc.brick_def = function(id, w, h, color, design_id, brick_id) {
+pyc.brick_def = function(id, w, h, color, design_id, brick_id, color_name, price) {
   this.id = id;
   this.w = w;
   this.h = h;
   this.color = color;
   this.design_id = design_id;
   this.brick_id = brick_id;
+  this.color_name = color_name;
+  this.price = price;
 };
 
 pyc.brick_def.prototype.prop_id = function() {
@@ -63,13 +48,13 @@ pyc.catalog = function() {
   this.next_id = 1;
 };
 
-pyc.catalog.prototype.register = function(w, h, color, design_id, brick_id) {
+pyc.catalog.prototype.register = function(w, h, color, color_name, design_id, brick_id, price) {
   var real_design_id = design_id || pyc.prop_to_design_id(w, h);
   var real_brick_id = brick_id || pyc.prop_to_brick_id(w, h, color);
   var prop_id = pyc.prop_to_prop_id(w, h, color);
   var id = this.next_id;
   this.next_id += 1;
-  var def = new pyc.brick_def(id, w, h, color, real_design_id, real_brick_id);
+  var def = new pyc.brick_def(id, w, h, color, real_design_id, real_brick_id, color_name, price);
   this.by_props[prop_id] = def;
   this.by_brick_id[real_brick_id] = def;
   this.by_id[id] = def;
@@ -77,12 +62,21 @@ pyc.catalog.prototype.register = function(w, h, color, design_id, brick_id) {
 
 pyc.catalog.init = function() {
   var catalog = new pyc.catalog();
-  for (var ci = 0; ci < pyc.COLORS.length; ++ci) {
-    for (var wi = 0; wi < pyc.WIDTHS.length; ++wi) {
-      for (var hi = 0; hi < pyc.HEIGHTS.length; ++hi) {
-        catalog.register(pyc.WIDTHS[wi], pyc.HEIGHTS[hi], pyc.COLORS[ci]);
-      }
-    }
+  for (var ci = 0; ci < pyc.COLS.LEGO.length; ++ci) {
+    var color = pyc.COLS.LEGO[ci].col;
+    var color_name = pyc.COLS.LEGO[ci].name;
+    catalog.register(8, 3, color, color_name, "3008", null, 19); // 0.79 / px
+    catalog.register(6, 3, color, color_name, "3009", null, 19); // 1.06
+    catalog.register(4, 3, color, color_name, "3010", null, 15); // 1.25
+    catalog.register(3, 3, color, color_name, "3622", null, 15); // 1.67
+    catalog.register(2, 3, color, color_name, "3004", null, 11); // 1.83
+    catalog.register(1, 3, color, color_name, "3005", null,  8); // 2.67
+    catalog.register(8, 1, color, color_name, "3460", null, 15); // 1.87
+    catalog.register(6, 1, color, color_name, "3666", null, 11); // 1.83
+    catalog.register(4, 1, color, color_name, "3710", null,  8); // 2.00
+    catalog.register(3, 1, color, color_name, "3623", null,  8); // 2.67
+    catalog.register(2, 1, color, color_name, "3023", null,  8); // 4.00
+    catalog.register(1, 1, color, color_name, "3024", null,  8); // 8.00
   }
   pyc.CATALOG = catalog;
   return catalog;
@@ -174,8 +168,25 @@ pyc.board.prototype.replace = function(x, y, def) {
   this.put(x, y, def);
 };
 
+pyc.board.prototype.optimize = function() {
+  this.try_size(8, 3);
+  this.try_size(6, 3);
+  this.try_size(4, 3);
+  this.try_size(3, 3);
+  this.try_size(2, 3);
+  this.try_size(6, 1);  
+  this.try_size(8, 1);
+  this.try_size(4, 1); 
+  this.try_size(1, 3);
+  this.try_size(3, 1);
+  this.try_size(2, 1);
+  this.try_size(1, 1);
+};
+
 pyc.board.prototype.stats = function() {
   var stats = {};
+  var price = 0;
+  var count = 0;
   for (var x = 0; x < this.w; ++x) {
     for (var y = 0; y < this.h; ++y) {
       var brick = this.get_brick(x, y);
@@ -186,8 +197,12 @@ pyc.board.prototype.stats = function() {
         } else {
           stats[prop_id] = 1;
         }
+        count += 1;
+        price += brick.def.price;
       }
     }
   }
+  stats["count"] = count;
+  stats["price"] = price;
   return stats;
 };

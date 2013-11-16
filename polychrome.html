@@ -27,7 +27,9 @@ canvas
       <option>tomcat-logo.png</option>
       <option>sonic.png</option>
       <option>monalisa.png</option>
-      <option selected="selected">SmallAndStarry.png</option>
+      <option selected="selected">StarryNight.png</option>
+      <option>BertheMorisot.png</option>
+      <option>GirlWithPearlEarring.jpg</option>
     </select>
     or upload your own:
     <input type="file" id="upload" onchange="pyc.upload()"></input>
@@ -53,13 +55,13 @@ canvas
       <option value="RGBW">RGB</option>
       <option value="LEGO" selected="selected">LEGO</option>
     </select>
-    Sticker Size: <select id="gsize" onchange="pyc.start()">
+    Sticker/Brick Size: <select id="gsize" onchange="pyc.start()">
       <option value="1">1</option>
       <option value="2">2</option>
       <option value="3">3</option>
-      <option value="4">4</option>
+      <option value="4" selected="selected">4</option>
       <option value="5">5</option>
-      <option value="6" selected="selected">6</option>
+      <option value="6">6</option>
       <option value="7">7</option>
       <option value="8">8</option>
       <option value="9">9</option>
@@ -73,9 +75,9 @@ canvas
       <option value="1.5">1.5</option>
       <option value="2">2</option>
       <option value="3">3</option>
-      <option value="4">4</option>
+      <option value="4" selected="selected">4</option>
       <option value="6">6</option>
-      <option value="8" selected="selected">8</option>
+      <option value="8">8</option>
       <option value="16">16</option>
       </select>
     <br>
@@ -84,9 +86,9 @@ canvas
       <option value="3">hex</option>
       <option value="L" selected="selected">Lego 3-stack</option>
     </select>
-    Sticker unit price: <input id="price"></input>
+    Unit price: <input id="price"></input>
     <br>
-    <img src="SmallAndStarry.png" id="image_in"></img><p id="needed"></p>
+    <img src="StarryNight.png" id="image_in"></img><p id="needed"></p>
     <!--img src="firefox-logo.png" id="image_in"></img><br-->
     <div style="right: 5px; height: 100%; overflow: auto">
       <canvas width="600" height="800" id="viewport">Canvas not supported</canvas>
