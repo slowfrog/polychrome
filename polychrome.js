@@ -68,21 +68,21 @@ pyc.COLS.GOM8 = [{ name: "blue",   col: "#09f", r: 255, g: 102, b:   0 },
 
 pyc.COLS.LEGO = [{ name: "white",    col: "#ffffff", r:   0, g:   0, b:   0 },
                  { name: "obrown",   col: "#ff9734", r:   0, g: 104, b: 203 },
-		         { name: "black",    col: "#101010", r: 239, g: 239, b: 239 },
-		         { name: "lgray",    col: "#aeaeae", r:  81, g:  81, b:  81 },
-		         { name: "red",      col: "#ca171a", r:  53, g: 232, b: 229 },
-		         { name: "blue",     col: "#2036d9", r: 223, g: 201, b:  38 },
-		         { name: "green" ,   col: "#23c43a", r: 220, g:  59, b: 197 },
-		         //{ name: "bordeaux", col: "#802f3e", r: 127, g: 208, b: 193 },
-		         { name: "lavender", col: "#a070b9", r:  95, g: 143, b:  70 },
-		         { name: "beige",    col: "#d1be86", r:  46, g:  65, b: 121 },
-		         { name: "gray",     col: "#757575", r: 138, g: 138, b: 138 },
-		         { name: "dblue",    col: "#0a356f", r: 245, g: 202, b: 144 },
-		         { name: "yellow",   col: "#fce909", r:   3, g:  22, b: 246 },
-		         { name: "brown",    col: "#683f2a", r: 151, g: 192, b: 213 },
-		         //{ name: "lgreen", col: "#b3dc52", r:  76, g:  35, b: 173 },
-		         //{ name: "pink", col: "#ffbaf3", r:   0, g:  69, b:  12 }
-		];
+                 { name: "black",    col: "#101010", r: 239, g: 239, b: 239 },
+                 { name: "lgray",    col: "#aeaeae", r:  81, g:  81, b:  81 },
+                 { name: "red",      col: "#ca171a", r:  53, g: 232, b: 229 },
+                 { name: "blue",     col: "#2036d9", r: 223, g: 201, b:  38 },
+                 { name: "green" ,   col: "#23c43a", r: 220, g:  59, b: 197 },
+                 //{ name: "bordeaux", col: "#802f3e", r: 127, g: 208, b: 193 },
+                 { name: "lavender", col: "#a070b9", r:  95, g: 143, b:  70 },
+                 { name: "beige",    col: "#d1be86", r:  46, g:  65, b: 121 },
+                 { name: "gray",     col: "#757575", r: 138, g: 138, b: 138 },
+                 { name: "dblue",    col: "#0a356f", r: 245, g: 202, b: 144 },
+                 { name: "yellow",   col: "#fce909", r:   3, g:  22, b: 246 },
+                 { name: "brown",    col: "#683f2a", r: 151, g: 192, b: 213 },
+                 //{ name: "lgreen", col: "#b3dc52", r:  76, g:  35, b: 173 },
+                 //{ name: "pink", col: "#ffbaf3", r:   0, g:  69, b:  12 }
+                ];
 
 pyc.conversion_running = false;
 pyc.stop_conversion = false;
@@ -99,10 +99,10 @@ pyc.convert_image = function() {
   pyc.conversion_running = true;
   var needed = document.getElementById("needed");
   needed.innerHTML = "Sticker/bricks needed: computing...";
-  
   var z = parseInt(document.getElementById("gsize").value);
   var zoom = parseFloat(document.getElementById("zoom").value);
   var palette = document.getElementById("palette").value;
+  pyc.catalog.init(pyc.COLS[palette]);
   var cols = pyc.COLS[palette].slice(0); // Copy array
   var back = document.getElementById("back").value;
   var altback = back === "#ffffff" ? "#eeeeee" : "#222222";
@@ -113,7 +113,7 @@ pyc.convert_image = function() {
   }
   var hex = document.getElementById("grid").value === "3";
   var lego = document.getElementById("grid").value === "L";
-
+  var dither = document.getElementById("dither").value;
   var viewport = document.getElementById("viewport");
   var img = document.getElementById("image_in");
   var width = img.width;
@@ -128,15 +128,16 @@ pyc.convert_image = function() {
 
   var tmp = document.createElement("canvas");
   tmp.width = Math.ceil(width / zoom);
-  tmp.height = Math.ceil(height / zoom);
+  tmp.height = Math.ceil(height / zoom) * (lego ? 3 : 1);
   var gfx = tmp.getContext("2d");
+  var errordata = gfx.getImageData(0, 0, tmp.width, tmp.height);
   gfx.fillStyle = back;
   gfx.fillRect(0, 0, tmp.width, tmp.height);
   gfx.drawImage(img, 0, 0, width, height, 0, 0, tmp.width, tmp.height);
 
   var data;
   try {
-      data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
+    data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
   } catch (e) {
     // Probably a security error, let's stop
     console.log(e);
@@ -154,7 +155,6 @@ pyc.convert_image = function() {
       gx.stroke();
       gx.restore();
     }
-    
     for (var j = 0; j < tmp.height; ++j) {
       if ((i === 0) && (j % 5 === 0)) {
         gx.save();
@@ -168,21 +168,31 @@ pyc.convert_image = function() {
       }
     }
   }
-  pyc.do_conversion(tmp, data, cols, gx, z, back, altback, hex, lego);
+  if (lego) {
+    pyc.do_lego_conversion(tmp, data, cols, gx, z, back, altback, dither);
+  } else {
+    pyc.do_conversion(tmp, data, cols, gx, z, back, altback, hex);
+  }
 };
 
-
-pyc.do_conversion = function(src, data, cols, gx, z, back, altback, hex, lego) {
+pyc.do_conversion = function(src, data, cols, gx, z, back, altback, hex) {
   var size = src.width * src.height;
   var used = {};
-  var cat = lego ? pyc.CATALOG : null;
-  var board = lego ? new pyc.board(src.width, src.height * 3) : null;
-  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back, 
-                          altback, hex, lego, cat, board);
+  pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back,
+                          altback, hex);
 };
 
-pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t, 
-                                   end_t, back, altback, hex, lego, cat, board) {
+pyc.do_lego_conversion = function(src, data, cols, gx, z, back, altback, dither) {
+  var size = src.width * src.height;
+  var used = {};
+  var cat = pyc.CATALOG;
+  var board = new pyc.board(src.width, src.height);
+  pyc.do_lego_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back,
+                               altback, cat, board, dither);
+};
+
+pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t,
+                                   end_t, back, altback, hex) {
   if (pyc.stop_conversion) {
     pyc.stop_conversion = false;
     pyc.conversion_running = false;
@@ -199,13 +209,13 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t,
     var b = data[didx + 2];
     var a = data[didx + 3];
     var cx, cy;
-    
-    var conv = (hex || lego) ? pyc.convert3(r, g, b, cols) : pyc.convert(r, g, b, cols);
+
+    var conv = hex ? pyc.convert3(r, g, b, cols) : pyc.convert(r, g, b, cols);
     gx.fillStyle = (i + j) % 2 === 0 ? back : altback;
-    if (!(hex || lego)) {
+    if (!hex) {
       gx.fillRect(z * i * 2 + 0.5, z * j * 2 + 0.5, z * 2, z * 2);
     }
-    
+
     for (var e = 0; e < conv.length; ++e) {
       var de = Math.floor(e / 2);
       var col = (e < conv.length ? conv[e].col : "#000000");
@@ -217,7 +227,7 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t,
         used[col] = 0;
       }
       used[col] += 1;
-      
+
       gx.fillStyle = col;
       // Discs
       gx.beginPath();
@@ -230,7 +240,7 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t,
             cx = i * 1.5 + e - 2 + 1;
             cy = j * 2 * pyc.Y_FACTOR + 0.5 + pyc.Y_FACTOR;
           }
-          
+
         } else {
           if (e < 1) {
             cx = i * 1.5 + e + 1;
@@ -240,61 +250,182 @@ pyc.do_conversion_chunk = function(src, data, cols, gx, z, used, size, start_t,
             cy = j * 2 * pyc.Y_FACTOR + 0.5 + pyc.Y_FACTOR;
           }
         }
-      } else if (lego) {
-        cx = (i * 2 + 0.5);
-        cy = (j * 2 + e * 2 / 3 + 0.5);
-        
+
       } else {
         cx = (i * 2 + (e % 2) + 0.5);
         cy = (j * 2 + de + 0.5);
       }
-      if (!lego) {
-        gx.arc(z * cx, z * cy, z / 2, 0, Math.PI * 2, true);
-      } else {
-        var bdef = cat.by_props[pyc.prop_to_prop_id(1, 1, col)];
-        board.put(i, j * 3 + e, bdef);
-        gx.rect(z * cx + 0.5, z * cy + 0.5, z * 2, z * 2 / 3);
-      }
+      gx.arc(z * cx, z * cy, z / 2, 0, Math.PI * 2, true);
       gx.fill();
     }
   }
-  if (t < size) {
-    // Launch the following conversion asynchronously
-    setTimeout(function() {
-      pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, end_t, end_t + end_t - start_t,
-                              back, altback, hex, lego, cat, board);
-      }, 0);
-  } else {
-    pyc.BOARD = board;
+  if (t == size) {
+    pyc.finish_conversion(src, used, false, null);
+  }
+
+  // Launch the following conversion asynchronously
+  setTimeout(function() {
+    pyc.do_conversion_chunk(src, data, cols, gx, z, used, size, end_t,
+			    end_t + end_t - start_t, back, altback, hex);
+  }, 0);
+};
+
+pyc.do_lego_conversion_chunk = function(src, data, cols, gx, z, used, size,
+					start_t, end_t, back, altback, cat,
+					board, dither) {
+  if (pyc.stop_conversion) {
+    pyc.stop_conversion = false;
     pyc.conversion_running = false;
-    var needed = document.getElementById("needed");
-    var text = "";
-    var total = 0;
-    for (var k in used) {
-      if (text.length > 0) {
-        text += ", "
+    return;
+  }
+  var t;
+  var max_t = Math.min(size, end_t);
+  for (t = start_t; t < max_t; ++t) {
+    var j = Math.floor(t / src.width);
+    var i = t - j * src.width;
+    var didx = 4 * t;
+    var r = data[didx];
+    var g = data[didx + 1];
+    var b = data[didx + 2];
+    var a = data[didx + 3];
+    var cx, cy;
+
+    var conv = pyc.convert1(r, g, b, cols);
+    gx.fillStyle = (i + j) % 2 === 0 ? back : altback;
+    if (dither === "dumb") {
+      var destidx;
+      // Error propagation to the right (and bottom line at the end)
+      if (t < size) {
+        destidx = didx + 4;
+        pyc.push_error(data, destidx, conv[1]);
+        pyc.push_error(data, destidx + 1, conv[2]);
+        pyc.push_error(data, destidx + 2, conv[3]);
+      } 
+    } else if (dither === "3pix") {
+      // Error propagation inside the 3-brick 'pixel'
+      if (j % 3 != 2) {
+        destidx = didx + 4 * src.width;
+        pyc.push_error(data, destidx, conv[1]);
+        pyc.push_error(data, destidx + 1, conv[2]);
+        pyc.push_error(data, destidx + 2, conv[3]);
       }
-      text += "<span style=\"font-size: 200%; color: " + k + "\">\u25cf</span> " + used[k];
-      total += used[k];
+    } else if (dither === "down") {
+      // Error propagation down
+      if (j < src.height - 1) {
+        destidx = didx + 4 * src.width;
+        pyc.push_error(data, destidx, conv[1]);
+        pyc.push_error(data, destidx + 1, conv[2]);
+        pyc.push_error(data, destidx + 2, conv[3]);
+      }
+    } else if (dither === "southeast") {
+      // Error propagation down and right
+      if ((i < src.width - 1) && (j < src.height -1)) {
+        var destidx_s = didx + 4 * src.width;
+        var destidx_e = didx + 4;
+        var err;
+        err = pyc.push_error(data, destidx_s, conv[1] * 0.75);
+        pyc.push_error(data, destidx_e, err + conv[1] * 0.25);
+        err = pyc.push_error(data, destidx_s + 1, conv[2] * 0.75);
+        pyc.push_error(data, destidx_e + 1, err + conv[2] * 0.25);
+        err = pyc.push_error(data, destidx_s + 2, conv[3] * 0.75);
+        pyc.push_error(data, destidx_e + 2, err + conv[3] * 0.25);
+      }
+    } else if (dither === "sse") {
+      // Error propagation two pixels down and one right
+      if ((i < src.width - 1) && (j < src.height -1)) {
+        var destidx_s = didx + 4 * src.width;
+        var destidx_ss = didx + 8 * src.width;
+        var destidx_e = didx + 4;
+        var err;
+        err = pyc.push_error(data, destidx_s, conv[1] * 0.5);
+        err = pyc.push_error(data, destidx_e, err + conv[1] * 0.25);
+        pyc.push_error(data, destidx_ss, err + conv[1] * 0.25);
+        err = pyc.push_error(data, destidx_s + 1, conv[2] * 0.5);
+        err = pyc.push_error(data, destidx_e + 1, err + conv[2] * 0.25);
+        pyc.push_error(data, destidx_ss + 1, err + conv[2] * 0.25);
+        err = pyc.push_error(data, destidx_s + 2, conv[3] * 0.5);
+        err = pyc.push_error(data, destidx_e + 2, err + conv[3] * 0.25);
+        pyc.push_error(data, destidx_ss + 2, err + conv[3] * 0.25);
+      }
     }
-    var unitprice = parseFloat(document.getElementById("price").value);
-    var price = unitprice ? (", price: "+ unitprice * total) : "";
-    needed.innerHTML = ("Stickers/bricks needed: " + text + "<br>"+
-                        "Total: " + total + price + ", Size: " + src.width + "x" + src.height);
-    if (lego) {
+
+    var col = conv[0].col;
+    var colname = conv[0].name;
+    if (colname === "-none-") {
+      continue;
+    }
+    if (used[col] === undefined) {
+      used[col] = 0;
+    }
+    used[col] += 1;
+
+    gx.fillStyle = col;
+    // Rect
+    gx.beginPath();
+    cx = (i * 2 + 0.5);
+    cy = (j * 2 / 3 + 0.5);
+    var bdef = cat.by_props[pyc.prop_to_prop_id(1, 1, col)];
+    board.put(i, j, bdef);
+    gx.rect(z * cx + 0.5, z * cy + 0.5, z * 2, z * 2 / 3);
+    gx.fill();
+  }
+  if (t == size) {
+    pyc.finish_conversion(src, used, true, board);
+  }
+
+  // Launch the following conversion asynchronously
+  setTimeout(function() {
+    pyc.do_lego_conversion_chunk(src, data, cols, gx, z, used, size, end_t,
+				 end_t + end_t - start_t, back, altback, cat,
+				 board, dither);
+  }, 0);
+};
+
+pyc.push_error = function(data, idx, error) {
+  var newval = data[idx] + error;
+  if (newval > 255) {
+    data[idx] = 255;
+    return newval - 255;
+  } else if (newval < 0) {
+    data[idx] = 0;
+    return newval;
+  } else {
+    data[idx] = newval;
+    return 0;
+  }
+}
+
+pyc.finish_conversion = function(src, used, lego, board) {
+  pyc.BOARD = board;
+  pyc.conversion_running = false;
+  var needed = document.getElementById("needed");
+  var text = "";
+  var total = 0;
+  for (var k in used) {
+    if (text.length > 0) {
+      text += ", "
+    }
+    text += "<span style=\"font-size: 200%; color: " + k +
+	    "\">\u25cf</span> " + used[k];
+    total += used[k];
+  }
+  var unitprice = parseFloat(document.getElementById("price").value);
+  var price = unitprice ? (", price: "+ unitprice * total) : "";
+  needed.innerHTML = ("Stickers/bricks needed: " + text + "<br>"+
+      "Total: " + total + price + ", Size: " + src.width + "x" + src.height);
+  if (lego) {
       needed.innerHTML += (", actual size: " +
-                           (src.width * 0.8) + "cm x " +
-                           (src.height * 0.9) + "cm. Optimizing...");
-      setTimeout(function() {
-        pyc.BOARD.optimize();
-        var stats = pyc.BOARD.stats();
-        document.getElementById("needed").innerHTML += (
+          (src.width * 0.8) + "cm x " +
+          (src.height * 0.3) + "cm. Optimizing...");
+    setTimeout(function() {
+      pyc.BOARD.optimize();
+      var stats = pyc.BOARD.stats();
+      document.getElementById("needed").innerHTML += (
           "<br>Actual brick count: " + stats["count"] +
           ", price: " + (stats["price"] / 100) + "EUR<br>" +
           "EUR/pixel: " + (stats["price"] / (100 * pyc.BOARD.w * pyc.BOARD.h)));
       }, 0);
     }
-  }
 };
 
 
@@ -311,7 +442,7 @@ pyc.convert = function(r, g, b, cols) {
       return [col, col, col, col];
     }
   }
-  
+
   var ret = [];
   var mindist = 72 * 255;
   for (var a00 = 0; a00 < clen; ++a00) {
@@ -346,7 +477,7 @@ pyc.convert3 = function(r, g, b, cols) {
       return [col, col, col, col];
     }
   }
-  
+
   var ret = [];
   var mindist = 72 * 255;
   for (var a00 = 0; a00 < clen; ++a00) {
@@ -361,6 +492,35 @@ pyc.convert3 = function(r, g, b, cols) {
           ret = [ cols[a00], cols[a10], cols[a01] ];
         }
       }
+    }
+  }
+  return ret;
+};
+
+// Convert one color in RGB format to the closest color in the given palette
+pyc.convert1 = function(r, g, b, cols) {
+  var clen = cols.length;
+  // Check if color is same as '-none-' to avoid using stickers in that case
+  for (var c = 0; c < clen; ++c) {
+    var col = cols[c];
+    if ((col.name === "-none-") &&
+        (r === (255 - col.r)) &&
+        (g === (255 - col.g)) &&
+        (b === (255 - col.b))) {
+      return [col, 0, 0, 0];
+    }
+  }
+
+  var ret = null;
+  var mindist = 72 * 255;
+  for (var a00 = 0; a00 < clen; ++a00) {
+    var vr = 255 - cols[a00].r;
+    var vg = 255 - cols[a00].g;
+    var vb = 255 - cols[a00].b;
+    var dist = 2 * Math.abs(vr - r) + 3 * Math.abs(vg - g) + Math.abs(vb - b);
+    if ((dist < mindist) || ((dist === mindist) && (Math.random() < 0.5))) {
+      mindist = dist;
+      ret = [cols[a00], r - vr, g - vg, b - vb];
     }
   }
   return ret;
@@ -404,7 +564,6 @@ pyc.upload = function() {
 
 
 pyc.start = function() {
-  pyc.catalog.init();
   //document.getElementById("upload").addEventListener("change", pyc.upload);
   pyc.convert_image();
 };

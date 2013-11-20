@@ -60,11 +60,11 @@ pyc.catalog.prototype.register = function(w, h, color, color_name, design_id, br
   this.by_id[id] = def;
 };
 
-pyc.catalog.init = function() {
+pyc.catalog.init = function(palette) {
   var catalog = new pyc.catalog();
-  for (var ci = 0; ci < pyc.COLS.LEGO.length; ++ci) {
-    var color = pyc.COLS.LEGO[ci].col;
-    var color_name = pyc.COLS.LEGO[ci].name;
+  for (var ci = 0; ci < palette.length; ++ci) {
+    var color = palette[ci].col;
+    var color_name = palette[ci].name;
     catalog.register(8, 3, color, color_name, "3008", null, 19); // 0.79 / px
     catalog.register(6, 3, color, color_name, "3009", null, 19); // 1.06
     catalog.register(4, 3, color, color_name, "3010", null, 15); // 1.25
