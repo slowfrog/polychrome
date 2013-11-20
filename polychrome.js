@@ -292,9 +292,15 @@ pyc.do_lego_conversion_chunk = function(src, data, cols, gx, z, used, size,
 
     var conv = pyc.convert1(r, g, b, cols);
     gx.fillStyle = (i + j) % 2 === 0 ? back : altback;
+    if (t < size) {
+      // Error propagation to the right (and bottom line at the end)
+      data[didx + 4] = Math.max(0, Math.min(255, data[didx + 4] + conv[1]));
+      data[didx + 5] = Math.max(0, Math.min(255, data[didx + 5] + conv[2]));
+      data[didx + 6] = Math.max(0, Math.min(255, data[didx + 6] + conv[3]));
+    }
 
-    var col = conv.col;
-    var colname = conv.name;
+    var col = conv[0].col;
+    var colname = conv[0].name;
     if (colname === "-none-") {
       continue;
     }
@@ -437,7 +443,7 @@ pyc.convert1 = function(r, g, b, cols) {
         (r === (255 - col.r)) &&
         (g === (255 - col.g)) &&
         (b === (255 - col.b))) {
-      return col;
+      return [col, 0, 0, 0];
     }
   }
 
@@ -450,7 +456,7 @@ pyc.convert1 = function(r, g, b, cols) {
     var dist = 2 * Math.abs(vr - r) + 3 * Math.abs(vg - g) + Math.abs(vb - b);
     if ((dist < mindist) || ((dist === mindist) && (Math.random() < 0.5))) {
       mindist = dist;
-      ret = cols[a00];
+      ret = [cols[a00], r - vr, g - vg, b - vb];
     }
   }
   return ret;
