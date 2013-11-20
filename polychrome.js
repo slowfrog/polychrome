@@ -99,10 +99,10 @@ pyc.convert_image = function() {
   pyc.conversion_running = true;
   var needed = document.getElementById("needed");
   needed.innerHTML = "Sticker/bricks needed: computing...";
-  
   var z = parseInt(document.getElementById("gsize").value);
   var zoom = parseFloat(document.getElementById("zoom").value);
   var palette = document.getElementById("palette").value;
+  pyc.catalog.init(pyc.COLS[palette]);
   var cols = pyc.COLS[palette].slice(0); // Copy array
   var back = document.getElementById("back").value;
   var altback = back === "#ffffff" ? "#eeeeee" : "#222222";
@@ -130,6 +130,7 @@ pyc.convert_image = function() {
   tmp.width = Math.ceil(width / zoom);
   tmp.height = Math.ceil(height / zoom);
   var gfx = tmp.getContext("2d");
+  var errordata = gfx.getImageData(0, 0, tmp.width, tmp.height);
   gfx.fillStyle = back;
   gfx.fillRect(0, 0, tmp.width, tmp.height);
   gfx.drawImage(img, 0, 0, width, height, 0, 0, tmp.width, tmp.height);
@@ -404,7 +405,6 @@ pyc.upload = function() {
 
 
 pyc.start = function() {
-  pyc.catalog.init();
   //document.getElementById("upload").addEventListener("change", pyc.upload);
   pyc.convert_image();
 };
