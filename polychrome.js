@@ -137,7 +137,7 @@ pyc.convert_image = function() {
 
   var data;
   try {
-      data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
+    data = gfx.getImageData(0, 0, tmp.width, tmp.height).data;
   } catch (e) {
     // Probably a security error, let's stop
     console.log(e);
@@ -169,7 +169,7 @@ pyc.convert_image = function() {
     }
   }
   if (lego) {
-    pyc.do_lego_conversion(tmp, data, cols, gx, z, back, altback, hex);
+    pyc.do_lego_conversion(tmp, data, cols, gx, z, back, altback);
   } else {
     pyc.do_conversion(tmp, data, cols, gx, z, back, altback, hex);
   }
@@ -182,11 +182,11 @@ pyc.do_conversion = function(src, data, cols, gx, z, back, altback, hex) {
                           altback, hex);
 };
 
-pyc.do_lego_conversion = function(src, data, cols, gx, z, back, altback, hex) {
-  var size = src.width * src.height * 3;
+pyc.do_lego_conversion = function(src, data, cols, gx, z, back, altback) {
+  var size = src.width * src.height;
   var used = {};
   var cat = pyc.CATALOG;
-  var board = new pyc.board(src.width, src.height * 3);
+  var board = new pyc.board(src.width, src.height);
   pyc.do_lego_conversion_chunk(src, data, cols, gx, z, used, size, 0, 100, back,
                                altback, cat, board);
 };
@@ -290,31 +290,28 @@ pyc.do_lego_conversion_chunk = function(src, data, cols, gx, z, used, size,
     var a = data[didx + 3];
     var cx, cy;
 
-    var conv = pyc.convert3(r, g, b, cols);
+    var conv = pyc.convert1(r, g, b, cols);
     gx.fillStyle = (i + j) % 2 === 0 ? back : altback;
 
-    for (var e = 0; e < conv.length; ++e) {
-      var de = Math.floor(e / 2);
-      var col = (e < conv.length ? conv[e].col : "#000000");
-      var colname = conv[e].name;
-      if (colname === "-none-") {
-        continue;
-      }
-      if (used[col] === undefined) {
-        used[col] = 0;
-      }
-      used[col] += 1;
-
-      gx.fillStyle = col;
-      // Discs
-      gx.beginPath();
-      cx = (i * 2 + 0.5);
-      cy = (j * 2 + e * 2 / 3 + 0.5);
-      var bdef = cat.by_props[pyc.prop_to_prop_id(1, 1, col)];
-      board.put(i, j * 3 + e, bdef);
-      gx.rect(z * cx + 0.5, z * cy + 0.5, z * 2, z * 2 / 3);
-      gx.fill();
+    var col = conv.col;
+    var colname = conv.name;
+    if (colname === "-none-") {
+      continue;
     }
+    if (used[col] === undefined) {
+      used[col] = 0;
+    }
+    used[col] += 1;
+
+    gx.fillStyle = col;
+    // Rect
+    gx.beginPath();
+    cx = (i * 2 + 0.5);
+    cy = (j * 2 / 3 + 0.5);
+    var bdef = cat.by_props[pyc.prop_to_prop_id(1, 1, col)];
+    board.put(i, j, bdef);
+    gx.rect(z * cx + 0.5, z * cy + 0.5, z * 2, z * 2 / 3);
+    gx.fill();
   }
   if (t == size) {
     pyc.finish_conversion(src, used, true, board);
@@ -410,7 +407,7 @@ pyc.convert3 = function(r, g, b, cols) {
       return [col, col, col, col];
     }
   }
-  
+
   var ret = [];
   var mindist = 72 * 255;
   for (var a00 = 0; a00 < clen; ++a00) {
@@ -425,6 +422,35 @@ pyc.convert3 = function(r, g, b, cols) {
           ret = [ cols[a00], cols[a10], cols[a01] ];
         }
       }
+    }
+  }
+  return ret;
+};
+
+// Convert one color in RGB format to the closest color in the given palette
+pyc.convert1 = function(r, g, b, cols) {
+  var clen = cols.length;
+  // Check if color is same as '-none-' to avoid using stickers in that case
+  for (var c = 0; c < clen; ++c) {
+    var col = cols[c];
+    if ((col.name === "-none-") &&
+        (r === (255 - col.r)) &&
+        (g === (255 - col.g)) &&
+        (b === (255 - col.b))) {
+      return col;
+    }
+  }
+
+  var ret = null;
+  var mindist = 72 * 255;
+  for (var a00 = 0; a00 < clen; ++a00) {
+    var vr = 255 - cols[a00].r;
+    var vg = 255 - cols[a00].g;
+    var vb = 255 - cols[a00].b;
+    var dist = 2 * Math.abs(vr - r) + 3 * Math.abs(vg - g) + Math.abs(vb - b);
+    if ((dist < mindist) || ((dist === mindist) && (Math.random() < 0.5))) {
+      mindist = dist;
+      ret = cols[a00];
     }
   }
   return ret;
